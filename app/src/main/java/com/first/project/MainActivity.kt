@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String?>
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var viewModel: MainViewModel
     private var showBottomSheet = mutableStateOf(false)
 
@@ -86,7 +86,6 @@ class MainActivity : ComponentActivity() {
             }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     @Preview
     fun CreateUi() {
@@ -186,50 +185,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    @Preview
-    private fun ShowContacts() {
-        val sheetState = rememberModalBottomSheetState()
-        val scope = rememberCoroutineScope()
-        var showBottomSheet by remember { mutableStateOf(false) }
-        Scaffold(
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    text = { Text(text = "Show bottom sheet") },
-                    icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = "", modifier = Modifier) },
-                    onClick = {
-                        showBottomSheet = true
-                    }
-                )
-            }
-        ) { contentPadding ->
-            // Screen content
-Text(text = "content padding")
-            if (showBottomSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        showBottomSheet = false
-                    },
-                    sheetState = sheetState
-                ) {
-                    // Sheet content
-
-                    Text(text = "sheet content")
-                    Button(onClick = {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showBottomSheet = false
-                            }
-                        }
-                    }) {
-                        Text("Hide bottom sheet")
-                    }
-                }
-            }
-        }
-    }
-
 }
 

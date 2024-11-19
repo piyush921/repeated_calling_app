@@ -18,7 +18,7 @@ object PermissionUtils {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun askReadContactsPermission(context: Context, launcher: ActivityResultLauncher<String?>) {
+    fun askReadContactsPermission(context: Context, launcher: ActivityResultLauncher<String>) {
         if (shouldShowRequestPermissionRationale(context as Activity, android.Manifest.permission.READ_CONTACTS)) {
             //user has denied permission. Now show dialog with explaination.
 
