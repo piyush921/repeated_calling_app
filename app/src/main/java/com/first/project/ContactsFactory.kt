@@ -4,10 +4,14 @@ import android.content.Context
 import android.database.Cursor
 import android.provider.ContactsContract
 import com.first.project.model.Contact
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 class ContactsFactory(private val context: Context) {
 
-    fun getContacts(): List<Contact> {
+    fun getContacts(): Flow<List<Contact>> = flow {
         val contactsList: ArrayList<Contact> = ArrayList()
 
         val contentResolver = context.contentResolver
@@ -53,9 +57,7 @@ class ContactsFactory(private val context: Context) {
                 }
             }
         }
-        cursor?.close()
-
-        return contactsList
-    }
+        emit(contactsList)
+    }.flowOn(Dispatchers.IO)
 
 }

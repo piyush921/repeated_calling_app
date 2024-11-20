@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startForegroundService
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.first.project.model.Contact
 import com.first.project.ui.theme.FirstProjectTheme
@@ -59,9 +61,12 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
-    private lateinit var viewModel: MainViewModel
     private var showBottomSheet = mutableStateOf(false)
     private var contactsList: List<Contact> = ArrayList()
+
+    private val viewModel: MainViewModel by viewModels {
+        ContactsViewModelFactory(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,7 +77,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    viewModel = viewModel()
                     CreateUi()
                     if (showBottomSheet.value) {
                         BottomSheet()
@@ -86,6 +90,7 @@ class MainActivity : ComponentActivity() {
                 if (isGranted) {
                     // Permission granted
                     showBottomSheet.value = true
+
                 } else {
                     // Permission denied
                 }
@@ -170,14 +175,9 @@ class MainActivity : ComponentActivity() {
     @Preview
     @Composable
     private fun BottomSheet() {
-
-        val context = LocalContext.current
-        var progressState by remember { mutableStateOf(true) }
-
         if (contactsList.isEmpty()) {
-            contactsList = ContactsFactory(context).getContacts()
+            getContacts()
         }
-        progressState = false
 
         val sheetState = rememberModalBottomSheetState()
         val scope = rememberCoroutineScope()
@@ -212,13 +212,23 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-                if (progressState) {
+                if (viewModel.contactsProgress.value) {
                     CircularProgressIndicator(
                         color = Color.Blue,
                         modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
                     )
+                } else {
+                    //show contacts list
                 }
+            }
+        }
+    }
 
+    private fun getContacts() {
+        lifecycleScope.launch {
+            viewModel.contactsFlow.collect { contactList ->
+                contactsList = contactList
+                viewModel.contactsProgress.value = false
             }
         }
     }
