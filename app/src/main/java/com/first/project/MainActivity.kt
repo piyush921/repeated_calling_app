@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -199,7 +203,7 @@ class MainActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Sheet content")
+                    Text(text = "Select Contact", color = Color.White, fontSize = 20.sp)
                     Image(
                         painter = painterResource(R.drawable.ic_close),
                         contentDescription = "close bottom sheet",
@@ -212,22 +216,44 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+                HorizontalDivider(thickness = 1.dp, color = Color.Gray)
                 if (viewModel.contactsProgress.value) {
                     CircularProgressIndicator(
                         color = Color.Blue,
-                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
+                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 20.dp),
                     )
                 } else {
-                    //show contacts list
+                    LazyColumn {
+                        items(contactsList) { item ->
+                            ContactItem(item)
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun ContactItem(contact: Contact) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                showBottomSheet.value = false
+                viewModel.contact.value = contact.phone.toString()
+            }) {
+            Text(
+                text = contact.name.toString(),
+                color = Color.White,
+                modifier = Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)
+            )
+            Text(text = contact.phone.toString(), color = Color.Gray)
         }
     }
 
     private fun getContacts() {
         lifecycleScope.launch {
             viewModel.contactsFlow.collect { contactList ->
-                contactsList = contactList
+                contactsList = contactList.sortedBy { it.name }
                 viewModel.contactsProgress.value = false
             }
         }
