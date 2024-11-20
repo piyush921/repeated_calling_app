@@ -3,6 +3,7 @@ package com.first.project
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,11 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.first.project.model.Contact
 import com.first.project.ui.theme.FirstProjectTheme
 import com.first.project.ui.theme.materialBlack
 import com.first.project.ui.theme.materialLight
@@ -56,6 +61,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var viewModel: MainViewModel
     private var showBottomSheet = mutableStateOf(false)
+    private var contactsList: List<Contact> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,7 +93,6 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    @Preview
     fun CreateUi() {
         val context = LocalContext.current
         Box(
@@ -162,8 +167,18 @@ class MainActivity : ComponentActivity() {
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
+    @Preview
     @Composable
     private fun BottomSheet() {
+
+        val context = LocalContext.current
+        var progressState by remember { mutableStateOf(true) }
+
+        if (contactsList.isEmpty()) {
+            contactsList = ContactsFactory(context).getContacts()
+        }
+        progressState = false
+
         val sheetState = rememberModalBottomSheetState()
         val scope = rememberCoroutineScope()
         ModalBottomSheet(
@@ -173,15 +188,37 @@ class MainActivity : ComponentActivity() {
             sheetState = sheetState
         ) {
             // Sheet content
-            Text(text = "Sheet content")
-            Button(onClick = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        showBottomSheet.value = false
-                    }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = "Sheet content")
+                    Image(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = "close bottom sheet",
+                        modifier = Modifier.clickable {
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    showBottomSheet.value = false
+                                }
+                            }
+                        }
+                    )
                 }
-            }) {
-                Text("Hide bottom sheet")
+                if (progressState) {
+                    CircularProgressIndicator(
+                        color = Color.Blue,
+                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp),
+                    )
+                }
+
             }
         }
     }
