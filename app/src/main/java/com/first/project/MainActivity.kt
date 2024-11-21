@@ -138,9 +138,13 @@ class MainActivity : ComponentActivity() {
                 }) {
                     Text(text = "Browse Contacts")
                 }
-                TextField(value = viewModel.contact.value, onValueChange = {
-                    viewModel.contact.value
-                }, modifier = Modifier.background(Color.White))
+                TextField(
+                    value = viewModel.contact.value.phone.toString(),
+                    onValueChange = {
+                        viewModel.contact.value.phone
+                    },
+                    modifier = Modifier.background(Color.White)
+                )
             }
 
             Column(
@@ -244,7 +248,7 @@ class MainActivity : ComponentActivity() {
             .fillMaxWidth()
             .clickable {
                 showBottomSheet.value = false
-                viewModel.contact.value = contact.phone.toString()
+                viewModel.contact.value = contact
             }) {
             Text(
                 text = contact.name.toString(),

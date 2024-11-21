@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FirstProject"
+rootProject.name = "repeating_calls"
 include(":app")

@@ -18,7 +18,7 @@ class MainViewModel(private val contactsFactory: ContactsFactory): ViewModel() {
     }
 
     val themeState: MutableState<Int> = mutableStateOf(LIGHT_THEME)
-    val contact: MutableState<String> = mutableStateOf("")
+    val contact: MutableState<Contact> = mutableStateOf(Contact("0", "home", "+91981403058"))
     val contactsProgress: MutableState<Boolean> = mutableStateOf(true)
 
     val contactsFlow: Flow<List<Contact>> = contactsFactory.getContacts()
