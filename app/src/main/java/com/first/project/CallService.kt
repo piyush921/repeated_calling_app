@@ -23,6 +23,9 @@ class CallService : Service() {
     }
 
     private lateinit var contact: Contact
+    private var reCallTime: Int = 30
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private val recallHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
@@ -32,19 +35,10 @@ class CallService : Service() {
     }
 
     private fun startCall() {
-
-        val phone: StringBuilder = StringBuilder(contact.phone.toString())
-
-        if (phone.length > 10 && !phone.startsWith("+")) {
-            phone.insert(0, "+")
-        } else if (phone.length == 10) {
-            phone.insert(0, "+91")
-        }
-
         val intent = Intent(Intent.ACTION_CALL).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        intent.data = Uri.parse("tel:$phone")
+        intent.data = Uri.parse("tel:${contact.phone}")
         ContextCompat.startActivity(this, intent, null)
 
         showNotification()
@@ -54,17 +48,27 @@ class CallService : Service() {
 
         contact = intent?.getParcelableExtra<Contact>(PHONE_NUMBER) as Contact
         startCall()
+        startReCallTimer()
 
-        val handler = Handler(Looper.getMainLooper())
-
-        handler.postDelayed(object: Runnable {
+        timerHandler.postDelayed(object: Runnable {
             override fun run() {
                 startCall()
-               handler.postDelayed(this, 10000)
+                reCallTime = 30
+               timerHandler.postDelayed(this, 30000)
             }
-        }, 10000)
+        }, 30000)
 
         return START_STICKY
+    }
+
+    private fun startReCallTimer() {
+        recallHandler.postDelayed(object: Runnable {
+            override fun run() {
+                reCallTime--
+                updateNotificationTimer()
+                timerHandler.postDelayed(this, 1000)
+            }
+        }, 1000)
     }
 
     private fun showNotification() {
@@ -75,6 +79,28 @@ class CallService : Service() {
             .setOngoing(true)
             .build()
         startForeground(NOTIFICATION_ID, notification)
+    }
+
+    private fun updateNotificationTimer() {
+        val updatedNotification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_call)
+            .setContentTitle("Calling ${contact.name}")
+            .setContentText("R-call in $reCallTime seconds")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+
+        val notificationManager = NotificationManagerCompat.from(this)
+        if (PermissionUtils.checkNotificationPermission(this)) {
+            notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        timerHandler.removeCallbacksAndMessages(null)
+        recallHandler.removeCallbacksAndMessages(null)
     }
 
     private fun createNotificationChannel() {
