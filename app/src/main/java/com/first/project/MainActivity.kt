@@ -3,7 +3,6 @@ package com.first.project
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,31 +19,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.first.project.model.Contact
 import com.first.project.ui.theme.FirstProjectTheme
 import com.first.project.ui.theme.materialBlack
@@ -160,19 +149,29 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(onClick = {
-                    /*Toast.makeText(context, "Started calling service...", Toast.LENGTH_SHORT).show()
-                val serviceIntent = Intent(context, CallService::class.java)
-                startForegroundService(context, serviceIntent)*/
+                    startCallService(context)
                 }, modifier = Modifier.padding(20.dp)) {
                     Text(text = "Start call service")
                 }
                 Button(onClick = {
-                    /*context.stopService(Intent(context, CallService::class.java))*/
+                    stopCallService(context)
                 }, modifier = Modifier.padding(20.dp)) {
                     Text(text = "End Call service")
                 }
             }
         }
+    }
+
+    private fun startCallService(context: Context) {
+        Toast.makeText(context, "Started calling service...", Toast.LENGTH_SHORT).show()
+
+        val serviceIntent = Intent(context, CallService::class.java)
+        serviceIntent.putExtra(CallService.PHONE_NUMBER, viewModel.contact.value)
+        startForegroundService(context, serviceIntent)
+    }
+
+    private fun stopCallService(context: Context) {
+        context.stopService(Intent(context, CallService::class.java))
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -218,10 +217,16 @@ class MainActivity : ComponentActivity() {
                 }
                 HorizontalDivider(thickness = 1.dp, color = Color.Gray)
                 if (viewModel.contactsProgress.value) {
-                    CircularProgressIndicator(
-                        color = Color.Blue,
-                        modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 20.dp),
-                    )
+                    Row(modifier = Modifier.padding(0.dp, 50.dp, 0.dp, 0.dp)) {
+                        Text(text = "Reading Contacts")
+                        CircularProgressIndicator(
+                            color = Color.DarkGray,
+                            strokeWidth = 4.dp,
+                            modifier = Modifier
+                                .padding(10.dp, 0.dp, 0.dp, 0.dp)
+                                .size(20.dp)
+                        )
+                    }
                 } else {
                     LazyColumn {
                         items(contactsList) { item ->

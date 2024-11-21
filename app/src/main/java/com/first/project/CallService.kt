@@ -17,6 +17,7 @@ class CallService: Service() {
 
     companion object {
         const val CHANNEL_ID = "ForegroundServiceChannel"
+        const val PHONE_NUMBER = "phone_number"
     }
 
     override fun onCreate() {
@@ -31,16 +32,25 @@ class CallService: Service() {
         startForeground(1, notification)
     }
 
-    private fun startCall(context: Context) {
+    private fun startCall(phone: StringBuilder) {
+
+        if (phone.length > 10 && !phone.startsWith("+")) {
+            phone.insert(0, "+")
+        } else if (phone.length == 10) {
+            phone.insert(0, "+91")
+        }
+
         val intent = Intent(Intent.ACTION_CALL)
-        intent.data = Uri.parse("tel:+919899099734")
-        ContextCompat.startActivity(context, intent, null)
+        intent.data = Uri.parse("tel:$phone")
+        ContextCompat.startActivity(this, intent, null)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        val phone = intent?.getStringExtra(PHONE_NUMBER)
+
         Handler(Looper.getMainLooper()).postDelayed({
-            startCall(this)
+            startCall(java.lang.StringBuilder(phone.toString()))
         }, 50000)
 
         return START_STICKY
