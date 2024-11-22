@@ -1,4 +1,4 @@
-package com.first.project
+package com.first.project.services
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -12,18 +12,15 @@ import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.first.project.Constants
+import com.first.project.PermissionUtils
+import com.first.project.R
 import com.first.project.model.Contact
 
 class CallService : Service() {
 
-    companion object {
-        const val CHANNEL_ID = "ForegroundServiceChannel"
-        const val PHONE_NUMBER = "phone_number"
-        const val NOTIFICATION_ID = 1
-    }
-
     private lateinit var contact: Contact
-    private var reCallTime: Int = 30
+    private var reCallTime: Int = 50
     private val timerHandler = Handler(Looper.getMainLooper())
     private val recallHandler = Handler(Looper.getMainLooper())
 
@@ -46,17 +43,17 @@ class CallService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        contact = intent?.getParcelableExtra<Contact>(PHONE_NUMBER) as Contact
+        contact = intent?.getParcelableExtra<Contact>(Constants.PHONE_NUMBER) as Contact
         startCall()
         startReCallTimer()
 
         timerHandler.postDelayed(object: Runnable {
             override fun run() {
                 startCall()
-                reCallTime = 30
-               timerHandler.postDelayed(this, 30000)
+                reCallTime = 50
+               timerHandler.postDelayed(this, 50000)
             }
-        }, 30000)
+        }, 50000)
 
         return START_STICKY
     }
@@ -72,27 +69,27 @@ class CallService : Service() {
     }
 
     private fun showNotification() {
-        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
+        val notification: Notification = Notification.Builder(this, Constants.CHANNEL_ID)
             .setContentTitle("Calling ${contact.name}")
             .setContentText("Re-call in ")
             .setSmallIcon(R.drawable.ic_call)
             .setOngoing(true)
             .build()
-        startForeground(NOTIFICATION_ID, notification)
+        startForeground(Constants.NOTIFICATION_ID, notification)
     }
 
     private fun updateNotificationTimer() {
-        val updatedNotification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val updatedNotification = NotificationCompat.Builder(this, Constants.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_call)
             .setContentTitle("Calling ${contact.name}")
-            .setContentText("R-call in $reCallTime seconds")
+            .setContentText("Re-calling in $reCallTime seconds")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build()
 
         val notificationManager = NotificationManagerCompat.from(this)
         if (PermissionUtils.checkNotificationPermission(this)) {
-            notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+            notificationManager.notify(Constants.NOTIFICATION_ID, updatedNotification)
         }
     }
 
@@ -105,9 +102,9 @@ class CallService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
+            Constants.CHANNEL_ID,
             "Call service",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_NONE
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)

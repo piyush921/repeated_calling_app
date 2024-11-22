@@ -36,7 +36,7 @@
         </activity>
 
         <service
-            android:name=".CallService"
+            android:name=".services.CallService"
             android:exported="false"
             android:foregroundServiceType="phoneCall"/>
     </application>

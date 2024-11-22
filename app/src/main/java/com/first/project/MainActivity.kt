@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.lifecycleScope
 import com.first.project.model.Contact
+import com.first.project.services.CallService
 import com.first.project.ui.theme.FirstProjectTheme
 import com.first.project.ui.theme.materialBlack
 import com.first.project.ui.theme.materialLight
@@ -53,7 +54,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestContactsPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestCallPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestNotificationPermissionLauncher: ActivityResultLauncher<String>
     private var showBottomSheet = mutableStateOf(false)
     private var contactsList: List<Contact> = ArrayList()
 
@@ -78,14 +81,38 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        requestPermissionLauncher =
+        requestContactsPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                 if (isGranted) {
-                    // Permission granted
                     showBottomSheet.value = true
-
                 } else {
-                    // Permission denied
+                    Toast.makeText(this, "Contacts permission needed", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        requestCallPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    if (!PermissionUtils.checkNotificationPermission(this)) {
+                        PermissionUtils.askNotificationPermission(
+                            this,
+                            requestNotificationPermissionLauncher
+                        )
+                    } else {
+                        startCallService(this)
+                    }
+                } else {
+                    Toast.makeText(this, "Call permission needed", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        requestNotificationPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    startCallService(this)
+                } else {
+                    Toast.makeText(this, "Notification permission needed", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
     }
@@ -132,7 +159,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         PermissionUtils.askReadContactsPermission(
                             context,
-                            requestPermissionLauncher
+                            requestContactsPermissionLauncher
                         )
                     }
                 }) {
@@ -153,7 +180,18 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(onClick = {
-                    startCallService(context)
+                    if (!PermissionUtils.checkCallPermission(context)) {
+                        PermissionUtils.askCallPermission(context, requestCallPermissionLauncher)
+                    } else {
+                        if (!PermissionUtils.checkNotificationPermission(context)) {
+                            PermissionUtils.askNotificationPermission(
+                                context,
+                                requestNotificationPermissionLauncher
+                            )
+                        } else {
+                            startCallService(context)
+                        }
+                    }
                 }, modifier = Modifier.padding(20.dp)) {
                     Text(text = "Start call service")
                 }
@@ -170,7 +208,7 @@ class MainActivity : ComponentActivity() {
         Toast.makeText(context, "Started calling service...", Toast.LENGTH_SHORT).show()
 
         val serviceIntent = Intent(context, CallService::class.java)
-        serviceIntent.putExtra(CallService.PHONE_NUMBER, viewModel.contact.value)
+        serviceIntent.putExtra(Constants.PHONE_NUMBER, viewModel.contact.value)
         startForegroundService(context, serviceIntent)
     }
 
