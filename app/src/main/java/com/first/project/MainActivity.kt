@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,8 +49,6 @@ import androidx.lifecycle.lifecycleScope
 import com.first.project.model.Contact
 import com.first.project.services.CallService
 import com.first.project.ui.theme.FirstProjectTheme
-import com.first.project.ui.theme.materialBlack
-import com.first.project.ui.theme.materialLight
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -67,7 +66,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            FirstProjectTheme {
+            FirstProjectTheme(darkTheme = viewModel.themeState.value) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -75,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     CreateUi()
                     if (showBottomSheet.value) {
-                        BottomSheet()
+                        SelectContactSheet()
                     }
                 }
             }
@@ -117,6 +116,7 @@ class MainActivity : ComponentActivity() {
             }
     }
 
+    @Preview
     @Composable
     fun CreateUi() {
         val context = LocalContext.current
@@ -124,16 +124,12 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    if (viewModel.themeState.value == MainViewModel.LIGHT_THEME) {
-                        materialBlack
-                    } else {
-                        materialLight
-                    }
+                    MaterialTheme.colorScheme.background
                 )
         ) {
             Image(
                 painter = painterResource(
-                    if (viewModel.themeState.value == MainViewModel.LIGHT_THEME) {
+                    if (viewModel.themeState.value) {
                         R.drawable.ic_light_theme
                     } else {
                         R.drawable.ic_dark_theme
@@ -142,11 +138,7 @@ class MainActivity : ComponentActivity() {
                 contentDescription = "theme_button",
                 modifier = Modifier
                     .clickable {
-                        if (viewModel.themeState.value == MainViewModel.LIGHT_THEME) {
-                            viewModel.themeState.value = MainViewModel.DARK_THEME
-                        } else {
-                            viewModel.themeState.value = MainViewModel.LIGHT_THEME
-                        }
+                        viewModel.themeState.value = !viewModel.themeState.value
                     }
                     .padding(10.dp),
                 alignment = Alignment.TopEnd,
@@ -200,6 +192,12 @@ class MainActivity : ComponentActivity() {
                 }, modifier = Modifier.padding(20.dp)) {
                     Text(text = "End Call service")
                 }
+                Text(
+                    text = "Do not press power button or close app when call service is running.",
+                    color = Color.Gray,
+                    modifier = Modifier.padding(20.dp),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -219,7 +217,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Preview
     @Composable
-    private fun BottomSheet() {
+    private fun SelectContactSheet() {
         if (contactsList.isEmpty()) {
             getContacts()
         }
@@ -244,7 +242,7 @@ class MainActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Select Contact", color = Color.White, fontSize = 20.sp)
+                    Text(text = "Select Contact", fontSize = 20.sp)
                     Image(
                         painter = painterResource(R.drawable.ic_close),
                         contentDescription = "close bottom sheet",
@@ -290,7 +288,7 @@ class MainActivity : ComponentActivity() {
             }) {
             Text(
                 text = contact.name.toString(),
-                color = Color.White,
+                //color = Color.White,
                 modifier = Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)
             )
             Text(text = contact.phone.toString(), color = Color.Gray)

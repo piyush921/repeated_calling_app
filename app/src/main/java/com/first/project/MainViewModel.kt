@@ -12,12 +12,7 @@ import kotlinx.coroutines.flow.catch
 
 class MainViewModel(private val contactsFactory: ContactsFactory): ViewModel() {
 
-    companion object {
-        const val LIGHT_THEME = 0
-        const val DARK_THEME = 1
-    }
-
-    val themeState: MutableState<Int> = mutableStateOf(LIGHT_THEME)
+    val themeState: MutableState<Boolean> = mutableStateOf(false)
     val contact: MutableState<Contact> = mutableStateOf(Contact("0", "home", "+91981403058"))
     val contactsProgress: MutableState<Boolean> = mutableStateOf(true)
 
