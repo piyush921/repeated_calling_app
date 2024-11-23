@@ -203,11 +203,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startCallService(context: Context) {
-        Toast.makeText(context, "Started calling service...", Toast.LENGTH_SHORT).show()
+        if (viewModel.validatePhone()) {
+            Toast.makeText(context, "Started calling service...", Toast.LENGTH_SHORT).show()
 
-        val serviceIntent = Intent(context, CallService::class.java)
-        serviceIntent.putExtra(Constants.PHONE_NUMBER, viewModel.contact.value)
-        startForegroundService(context, serviceIntent)
+            val serviceIntent = Intent(context, CallService::class.java)
+            serviceIntent.putExtra(Constants.PHONE_NUMBER, viewModel.contact.value)
+            startForegroundService(context, serviceIntent)
+        } else {
+            Toast.makeText(context, "Please select a contact", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun stopCallService(context: Context) {
